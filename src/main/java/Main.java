@@ -1,11 +1,16 @@
-import org.jsoup.Connection;
+
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.*;
 import org.jsoup.select.Elements;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.Scanner;
+import java.util.stream.Stream;
 
 /**
  * Created by Adolfo on 26/5/2017.
@@ -22,7 +27,7 @@ public class Main {
         try {
             document = Jsoup.connect(url).get();
             System.out.println("URL valido!\n");
-            IncisoA(document);
+            IncisoA(document,url);
 
             Elements parrafos = document.getElementsByTag("p");
             IncisoB(parrafos);
@@ -30,7 +35,7 @@ public class Main {
             Elements forms = document.getElementsByTag("form");
             IncisoD(forms);
             IncisoE(forms);
-            IncisoF(forms, url);
+            IncisoF(forms);
 
         } catch (UnknownHostException e) {
             System.err.println("URL no existe, verificar URL entrado \n");
@@ -39,26 +44,19 @@ public class Main {
         }
     }
 
-    private static void IncisoF(Elements forms, String url) throws IOException {
+    private static void IncisoF(Elements forms) throws IOException {
         int i = 1;
         String formUrl;
         Document newURL;
 
-        System.out.println("\nInciso F: \n");
+        System.out.println("- Inciso F: \n");
 
         for (Element form: forms) {
             System.out.println("Formulario " + i + ":");
             Elements posts = form.getElementsByAttributeValueContaining("method","post");
             for (Element post: posts) {
-                char urlChar = form.attr("action").charAt(0);
-                if(urlChar == '.'){
-                    int formUrlSize = form.attr("action").length();
-                    formUrl = form.attr("action").toString().substring(1,formUrlSize);
-                }
-                else{
-                    formUrl = form.attr("action");
-                }
-                newURL = Jsoup.connect(url + formUrl).data("asignatura","practica1").post();
+                String absURL = post.absUrl("action");
+                newURL = Jsoup.connect(absURL).data("asignatura","practica1").post();
                 System.out.println(newURL);
             }
             System.out.println("\n");
@@ -128,9 +126,18 @@ public class Main {
         return imgCount;
     }
 
-    private static void IncisoA(Document document) {
+    private static void IncisoA(Document document, String url) throws MalformedURLException {
+        URL getURL =  new URL(url);
+        InputStreamReader streamURL = null;
+        try {
+            streamURL = new InputStreamReader(getURL.openStream());
+        } catch (IOException e) {
+            //e.printStackTrace();
+        }
+        BufferedReader readURL = new BufferedReader(streamURL);
+        Stream<String> readLines = readURL.lines();
+        Object[] lines = readLines.toArray();
         System.out.println("- Inciso A: \n");
-        String[] lines = document.html().split("\n");
         System.out.println("Cantidad de lineas en el documento: "+lines.length + "\n");
     }
 }
